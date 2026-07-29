@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION = 'ap-south-1'
+        AWS_REGION   = 'ap-south-1'
         ECR_REGISTRY = '982920153818.dkr.ecr.ap-south-1.amazonaws.com'
-        IMAGE_NAME = 'notificationservice'
-        IMAGE_TAG = "${env.BUILD_NUMBER}"
-        APP_SERVER = '15.252.45.161'
+        IMAGE_NAME   = 'notificationservice'
+        IMAGE_TAG    = "${env.BUILD_NUMBER}"
+        APP_SERVER   = '15.252.45.161'
     }
 
     stages {
@@ -44,6 +44,9 @@ pipeline {
                 sh """
                     docker tag ${IMAGE_NAME}:${IMAGE_TAG} \
                     ${ECR_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+
+                    docker tag ${IMAGE_NAME}:${IMAGE_TAG} \
+                    ${ECR_REGISTRY}/${IMAGE_NAME}:latest
                 """
             }
         }
@@ -52,6 +55,7 @@ pipeline {
             steps {
                 sh """
                     docker push ${ECR_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                    docker push ${ECR_REGISTRY}/${IMAGE_NAME}:latest
                 """
             }
         }
@@ -66,14 +70,12 @@ pipeline {
                             cd /opt/microservices
 
                             docker compose pull notification-service
-
                             docker compose up -d notification-service
                         '
                     """
                 }
             }
         }
-
     }
 
     post {
