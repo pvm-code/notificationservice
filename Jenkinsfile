@@ -2,11 +2,8 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION   = 'ap-south-1'
-        ECR_REGISTRY = '982920153818.dkr.ecr.ap-south-1.amazonaws.com'
-        IMAGE_NAME   = 'notificationservice'
-        IMAGE_TAG    = "${env.BUILD_NUMBER}"
-        APP_SERVER   = '15.252.45.161'
+        IMAGE_NAME = 'notificationservice'
+        IMAGE_TAG  = "${env.BUILD_NUMBER}"
     }
 
     stages {
