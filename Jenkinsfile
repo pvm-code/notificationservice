@@ -41,9 +41,6 @@ pipeline {
                 sh """
                     docker tag ${IMAGE_NAME}:${IMAGE_TAG} \
                     ${ECR_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
-
-                    docker tag ${IMAGE_NAME}:${IMAGE_TAG} \
-                    ${ECR_REGISTRY}/${IMAGE_NAME}:latest
                 """
             }
         }
@@ -52,22 +49,18 @@ pipeline {
             steps {
                 sh """
                     docker push ${ECR_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
-                    docker push ${ECR_REGISTRY}/${IMAGE_NAME}:latest
                 """
             }
         }
 
-        stage('Deploy to App Server') {
+        stage('Deploy to Kubernetes') {
             steps {
-                sshagent(credentials: ['app-server-ssh-key']) {
+                sshagent(credentials: ['k8s-server-ssh-key']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ec2-user@${APP_SERVER} '
-                            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                        ssh -o StrictHostKeyChecking=no ec2-user@${K8S_SERVER} '
+                            sudo kubectl set image deployment/notification-service notification-service=${ECR_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
 
-                            cd /opt/microservices
-
-                            docker compose pull notification-service
-                            docker compose up -d notification-service
+                            sudo kubectl rollout status deployment/notification-service
                         '
                     """
                 }
