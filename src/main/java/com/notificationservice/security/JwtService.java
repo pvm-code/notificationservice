@@ -69,8 +69,24 @@ public class JwtService {
     public boolean isTokenValid(String token) {
 
         try {
+
+            System.out.println("Checking JWT...");
+
+            Claims claims = extractAllClaims(token);
+
+            System.out.println("Subject    : " + claims.getSubject());
+            System.out.println("Role       : " + claims.get("role"));
+            System.out.println("Expiration : " + claims.getExpiration());
+            System.out.println("Current    : " + new Date());
+
             return !isTokenExpired(token);
+
         } catch (Exception e) {
+
+            System.out.println("JWT Exception: " + e.getClass().getSimpleName());
+            System.out.println("JWT Exception: " + e.getClass().getName());
+            e.printStackTrace();
+
             return false;
         }
     }
