@@ -11,6 +11,9 @@ public class MetricsService {
 	private final Counter emailFailure;
 	private final Counter emailSuccess;
 	private final Counter kafkaConsumed;
+	private final Counter jwtValidationFailure;
+
+	
 	
 	public MetricsService(MeterRegistry registry) {
 			
@@ -23,6 +26,10 @@ public class MetricsService {
 		
 		this.kafkaConsumed=
 				registry.counter("kafka_messages_consumed_total");
+		
+
+		this.jwtValidationFailure=
+				registry.counter("jwt_validation_failed_total");
 		
 	}
 	
@@ -39,6 +46,9 @@ public class MetricsService {
     public void incrementKafkaConsumed() {
         kafkaConsumed.increment();
     }
-	
+
+    public void incrementJwtFailure() {
+        jwtValidationFailure.increment();
+    }
 
 }

@@ -10,6 +10,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.notificationservice.metrics.MetricsService;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,9 +21,12 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final MetricsService metricsService;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(JwtService jwtService,
+                                   MetricsService metricsService) {
         this.jwtService = jwtService;
+        this.metricsService = metricsService;
     }
 
     @Override
@@ -42,38 +47,51 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
-        System.out.println("JWT Token: " + token);
 
-        boolean valid = jwtService.isTokenValid(token);
-        System.out.println("Is Token Valid? : " + valid);
+        try {
 
-        if (!valid) {
-            System.out.println("Token validation failed.");
-            filterChain.doFilter(request, response);
-            return;
+            System.out.println("JWT Token: " + token);
+
+            boolean valid = jwtService.isTokenValid(token);
+            System.out.println("Is Token Valid? : " + valid);
+
+            if (!valid) {
+                System.out.println("Token validation failed.");
+                metricsService.incrementJwtFailure();
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            String username = jwtService.extractUsername(token);
+            String role = jwtService.extractRole(token);
+
+            System.out.println("Username : " + username);
+            System.out.println("Role      : " + role);
+
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            username,
+                            null,
+                            List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                    );
+
+            authentication.setDetails(
+                    new WebAuthenticationDetailsSource().buildDetails(request)
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            System.out.println("Authentication stored in SecurityContext.");
+            System.out.println("========== JWT FILTER FINISHED ==========\n");
+
+        } catch (Exception e) {
+
+            metricsService.incrementJwtFailure();
+
+            System.out.println("JWT Validation Exception:");
+            e.printStackTrace();
+
         }
-
-        String username = jwtService.extractUsername(token);
-        String role = jwtService.extractRole(token);
-
-        System.out.println("Username : " + username);
-        System.out.println("Role      : " + role);
-
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(
-                        username,
-                        null,
-                        List.of(new SimpleGrantedAuthority("ROLE_" + role))
-                );
-
-        authentication.setDetails(
-                new WebAuthenticationDetailsSource().buildDetails(request)
-        );
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        System.out.println("Authentication stored in SecurityContext.");
-        System.out.println("========== JWT FILTER FINISHED ==========\n");
 
         filterChain.doFilter(request, response);
     }
