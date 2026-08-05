@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notificationservice.kafka.event.UserRegisteredEvent;
+import com.notificationservice.metrics.MetricsService;
 import com.notificationservice.service.NotificationService;
 
 @Component
@@ -13,12 +14,17 @@ public class UserEventConsumer {
 	private final NotificationService notificationService;
 	
 	private final ObjectMapper objectMapper;
+	
+	private final MetricsService metricsService;
+
 
 	
 	
-	public UserEventConsumer(NotificationService notificationService, ObjectMapper objectMapper) {
+	public UserEventConsumer(NotificationService notificationService, ObjectMapper objectMapper,MetricsService metricsService) {
 		this.notificationService = notificationService;
 		this.objectMapper = objectMapper;
+		this.metricsService = metricsService;
+
 	}
 
 
@@ -33,6 +39,8 @@ public class UserEventConsumer {
 			UserRegisteredEvent event= objectMapper.readValue(message, UserRegisteredEvent.class);
 			
 			notificationService.sendWelcomeNotification(event);
+		    metricsService.incrementKafkaConsumed();
+
 		} 
 		catch (Exception e) {
 			e.printStackTrace();
