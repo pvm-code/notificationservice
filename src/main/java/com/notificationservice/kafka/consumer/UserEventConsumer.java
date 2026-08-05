@@ -28,23 +28,27 @@ public class UserEventConsumer {
 	}
 
 
-	@KafkaListener(
-			
-			topics = "user-registered"
-			
-			)
+	@KafkaListener(topics = "user-registered")
 	public void consume(String message) {
-		
-		try {
-			UserRegisteredEvent event= objectMapper.readValue(message, UserRegisteredEvent.class);
-			
-			notificationService.sendWelcomeNotification(event);
-		    metricsService.incrementKafkaConsumed();
 
-		} 
-		catch (Exception e) {
-			e.printStackTrace();
-		}
+	    System.out.println("Received Kafka message: " + message);
+
+	    try {
+	        UserRegisteredEvent event = objectMapper.readValue(message, UserRegisteredEvent.class);
+
+	        System.out.println("JSON parsed successfully");
+
+	        notificationService.sendWelcomeNotification(event);
+
+	        System.out.println("Notification sent");
+
+	        metricsService.incrementKafkaConsumed();
+
+	        System.out.println("Kafka counter incremented");
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
 	}
 
 }
