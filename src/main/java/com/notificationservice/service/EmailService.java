@@ -1,5 +1,10 @@
 package com.notificationservice.service;
 
+import java.math.BigDecimal;
+import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -13,6 +18,8 @@ public class EmailService {
     private final JavaMailSender mailSender;
     
 	private final MetricsService metricsService;
+
+	private static final Logger log=LoggerFactory.getLogger(NotificationService.class);
 
 	
 
@@ -51,4 +58,34 @@ public class EmailService {
 		}
         
     }
+	public void sendOrderCreatedEmail(
+	        String toEmail,
+	        UUID orderId,
+	        BigDecimal totalAmount) {
+
+	    try {
+
+	        SimpleMailMessage message = new SimpleMailMessage();
+
+	        message.setTo(toEmail);
+	        message.setSubject("Order Created Successfully");
+
+	        message.setText(
+	                "Hello,\n\n"
+	                + "Your order has been created successfully.\n\n"
+	                + "Order ID: " + orderId + "\n"
+	                + "Total Amount: ₹" + totalAmount + "\n\n"
+	                + "Thank you for your order!\n\n"
+	                + "Regards,\n"
+	                + "Notification Service"
+	        );
+
+	        mailSender.send(message);
+	        metricsService.incrementEmailSent();
+
+	    } catch (Exception e) {
+	        metricsService.incrementEmailFailed();
+	        log.error("Failed to send order confirmation email", e);
+	    }
+	}
 }

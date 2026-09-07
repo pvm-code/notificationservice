@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.notificationservice.kafka.event.OrderCreatedEvent;
 import com.notificationservice.kafka.event.UserRegisteredEvent;
 
 @Service
@@ -24,20 +25,18 @@ public class NotificationService {
 	public void sendWelcomeNotification(UserRegisteredEvent event) {
 		
 		
-		 	log.info("==============================================");
-	        log.info("Preparing Welcome Notification");
-	        log.info("User : {}", event.getName());
-	        log.info("Email: {}", event.getEmail());
-	        log.info("Registered At: {}", event.getRegisteredAt());
-	        log.info("Sending welcome email to {}", event.getEmail());
-	        log.info("==============================================");
-	        
 	        emailService.sendWelcomeEmail(
 	                event.getEmail(),
 	                event.getName()
 	        );
 		
+	}
+	
+	public void sendOrderCreatedNotification(OrderCreatedEvent event) {
 		
+		log.info("processing order notification for order: {}",event.getOrderId() );
+
+		emailService.sendOrderCreatedEmail(event.getEmail(), event.getOrderId(), event.getTotalAmount());
 		
 		
 	}
