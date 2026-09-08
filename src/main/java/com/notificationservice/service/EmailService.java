@@ -88,4 +88,42 @@ public class EmailService {
 	        log.error("Failed to send order confirmation email", e);
 	    }
 	}
+
+
+
+	public void sendOrderCancelledEmail(
+	        String toEmail,
+	        UUID orderId) {
+
+	    try {
+
+	        SimpleMailMessage message = new SimpleMailMessage();
+
+	        message.setTo(toEmail);
+	        message.setSubject("Order Cancelled");
+
+	        message.setText(
+	                "Hello,\n\n"
+	                + "Your order has been cancelled successfully.\n\n"
+	                + "Order ID: " + orderId + "\n\n"
+	                + "If you did not request this cancellation, "
+	                + "please contact our support team.\n\n"
+	                + "Regards,\n"
+	                + "Notification Service"
+	        );
+
+	        mailSender.send(message);
+
+	        metricsService.incrementEmailSent();
+
+	    } catch (Exception e) {
+
+	        metricsService.incrementEmailFailed();
+
+	        log.error(
+	                "Failed to send order cancellation email",
+	                e
+	        );
+	    }
+	}
 }
