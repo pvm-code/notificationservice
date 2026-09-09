@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.notificationservice.kafka.event.OrderCancelledEvent;
+import com.notificationservice.kafka.event.OrderConfirmedEvent;
 import com.notificationservice.kafka.event.OrderCreatedEvent;
 import com.notificationservice.kafka.event.UserRegisteredEvent;
 
@@ -55,6 +56,20 @@ public class NotificationService {
 	            event.getEmail(),
 	            event.getOrderId()
 	    );
+	}
+
+
+
+	public void sendOrderConfirmedNotification(OrderConfirmedEvent event) {
+		   log.info(
+		            "Sending confirmation notification for order: {}",
+		            event.getOrderId()
+		    );
+
+		    emailService.sendOrderConfirmedEmail(
+		            event.getEmail(),
+		            event.getOrderId()
+		    );		
 	}
 
 }

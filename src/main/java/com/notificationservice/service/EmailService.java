@@ -126,4 +126,39 @@ public class EmailService {
 	        );
 	    }
 	}
+
+
+
+	public void sendOrderConfirmedEmail(String toEmail, UUID orderId) {
+		 try {
+
+		        SimpleMailMessage message = new SimpleMailMessage();
+
+		        message.setTo(toEmail);
+		        message.setSubject("Order Confirmed");
+
+		        message.setText(
+		                "Hello,\n\n"
+		                + "Your order has been confirmed successfully.\n\n"
+		                + "Order ID: " + orderId + "\n\n"
+		                + "order will be dispatched soon , "
+		                + "please contact our support team for any help.\n\n"
+		                + "Regards,\n"
+		                + "Notification Service"
+		        );
+
+		        mailSender.send(message);
+
+		        metricsService.incrementEmailSent();
+
+		    } catch (Exception e) {
+
+		        metricsService.incrementEmailFailed();
+
+		        log.error(
+		                "Failed to send order cancellation email",
+		                e
+		        );
+		    }		
+	}
 }
