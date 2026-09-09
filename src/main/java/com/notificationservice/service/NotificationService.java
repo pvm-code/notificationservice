@@ -5,8 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.notificationservice.kafka.event.OrderCancelledEvent;
+import com.notificationservice.kafka.event.OrderCompletedEvent;
 import com.notificationservice.kafka.event.OrderConfirmedEvent;
 import com.notificationservice.kafka.event.OrderCreatedEvent;
+import com.notificationservice.kafka.event.OrderInTransitEvent;
 import com.notificationservice.kafka.event.UserRegisteredEvent;
 
 @Service
@@ -70,6 +72,34 @@ public class NotificationService {
 		            event.getEmail(),
 		            event.getOrderId()
 		    );		
+	}
+
+
+
+	public void sendOrderInTransitNotification(OrderInTransitEvent event) {
+		 log.info(
+		            "Sending intransit notification for order: {}",
+		            event.getOrderId()
+		    );
+
+		    emailService.sendOrderInTransitEmail(
+		            event.getEmail(),
+		            event.getOrderId()
+		    );		
+	}
+
+
+
+	public void sendOrderCompletedNotification(OrderCompletedEvent event) {
+		 log.info(
+		            "Sending completed notification for order: {}",
+		            event.getOrderId()
+		    );
+
+		    emailService.sendOrderCompletedEmail(
+		            event.getEmail(),
+		            event.getOrderId()
+		    );				
 	}
 
 }

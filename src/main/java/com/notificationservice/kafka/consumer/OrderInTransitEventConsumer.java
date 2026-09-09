@@ -9,10 +9,11 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notificationservice.kafka.event.OrderConfirmedEvent;
+import com.notificationservice.kafka.event.OrderInTransitEvent;
 import com.notificationservice.service.NotificationService;
 
 @Component
-public class OrderConfirmedEventConsumer {
+public class OrderInTransitEventConsumer {
 
     private static final Logger log =
             LoggerFactory.getLogger(OrderConfirmedEventConsumer.class);
@@ -20,7 +21,7 @@ public class OrderConfirmedEventConsumer {
     private final ObjectMapper objectMapper;
     private final NotificationService notificationService;
 
-    public OrderConfirmedEventConsumer(
+    public OrderInTransitEventConsumer(
             ObjectMapper objectMapper,
             NotificationService notificationService) {
 
@@ -29,30 +30,30 @@ public class OrderConfirmedEventConsumer {
     }
 
     @KafkaListener(
-            topics = "order-confirmed",
+            topics = "order-intransit",
             groupId = "notification-service"
     )
-    public void consumeOrderConfirmed(String message) {
+    public void consumeOrderInTransit(String message) {
 
         try {
 
-            OrderConfirmedEvent event =
+        	OrderInTransitEvent event =
                     objectMapper.readValue(
                             message,
-                            OrderConfirmedEvent.class
+                            OrderInTransitEvent.class
                     );
 
             log.info(
-                    "Received OrderCompletedEvent: {}",
+                    "Received OrderInTransitEvent: {}",
                     event
             );
 
-            notificationService.sendOrderConfirmedNotification(event);
+            notificationService.sendOrderInTransitNotification(event);
 
         } catch (JsonProcessingException e) {
 
             log.error(
-                    "Failed to deserialize OrderConfirmedEvent: {}",
+                    "Failed to deserialize OrderInTransitEvent: {}",
                     message,
                     e
             );

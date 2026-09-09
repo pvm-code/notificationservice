@@ -161,4 +161,74 @@ public class EmailService {
 		        );
 		    }		
 	}
+
+
+
+	public void sendOrderInTransitEmail(String toEmail, UUID orderId) {
+		try {
+
+	        SimpleMailMessage message = new SimpleMailMessage();
+
+	        message.setTo(toEmail);
+	        message.setSubject("Order in transit");
+
+	        message.setText(
+	                "Hello,\n\n"
+	                + "Your order is on the way.\n\n"
+	                + "Order ID: " + orderId + "\n\n"
+	                + "order  dispatched  , "
+	                + "please contact our support team for any help.\n\n"
+	                + "Regards,\n"
+	                + "Notification Service"
+	        );
+
+	        mailSender.send(message);
+
+	        metricsService.incrementEmailSent();
+
+	    } catch (Exception e) {
+
+	        metricsService.incrementEmailFailed();
+
+	        log.error(
+	                "Failed to send order cancellation email",
+	                e
+	        );
+	    }				
+	}
+
+
+
+	public void sendOrderCompletedEmail(String toEmail, UUID orderId) {
+		try {
+
+	        SimpleMailMessage message = new SimpleMailMessage();
+
+	        message.setTo(toEmail);
+	        message.setSubject("Order completed");
+
+	        message.setText(
+	                "Hello,\n\n"
+	                + "Your order is delivered successfully.\n\n"
+	                + "Order ID: " + orderId + "\n\n"
+	                + "give feedback on ****  , "
+	                + "please contact our support team for any help.\n\n"
+	                + "Regards,\n"
+	                + "Notification Service"
+	        );
+
+	        mailSender.send(message);
+
+	        metricsService.incrementEmailSent();
+
+	    } catch (Exception e) {
+
+	        metricsService.incrementEmailFailed();
+
+	        log.error(
+	                "Failed to send order cancellation email",
+	                e
+	        );
+	    }		
+	}
 }

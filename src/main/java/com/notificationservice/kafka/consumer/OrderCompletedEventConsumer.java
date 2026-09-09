@@ -8,11 +8,12 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.notificationservice.kafka.event.OrderCompletedEvent;
 import com.notificationservice.kafka.event.OrderConfirmedEvent;
 import com.notificationservice.service.NotificationService;
 
 @Component
-public class OrderConfirmedEventConsumer {
+public class OrderCompletedEventConsumer {
 
     private static final Logger log =
             LoggerFactory.getLogger(OrderConfirmedEventConsumer.class);
@@ -20,7 +21,7 @@ public class OrderConfirmedEventConsumer {
     private final ObjectMapper objectMapper;
     private final NotificationService notificationService;
 
-    public OrderConfirmedEventConsumer(
+    public OrderCompletedEventConsumer(
             ObjectMapper objectMapper,
             NotificationService notificationService) {
 
@@ -29,17 +30,17 @@ public class OrderConfirmedEventConsumer {
     }
 
     @KafkaListener(
-            topics = "order-confirmed",
+            topics = "order-completed",
             groupId = "notification-service"
     )
-    public void consumeOrderConfirmed(String message) {
+    public void consumeOrderCompleted(String message) {
 
         try {
 
-            OrderConfirmedEvent event =
+            OrderCompletedEvent event =
                     objectMapper.readValue(
                             message,
-                            OrderConfirmedEvent.class
+                            OrderCompletedEvent.class
                     );
 
             log.info(
@@ -47,12 +48,12 @@ public class OrderConfirmedEventConsumer {
                     event
             );
 
-            notificationService.sendOrderConfirmedNotification(event);
+            notificationService.sendOrderCompletedNotification(event);
 
         } catch (JsonProcessingException e) {
 
             log.error(
-                    "Failed to deserialize OrderConfirmedEvent: {}",
+                    "Failed to deserialize OrderCompletedEvent: {}",
                     message,
                     e
             );
