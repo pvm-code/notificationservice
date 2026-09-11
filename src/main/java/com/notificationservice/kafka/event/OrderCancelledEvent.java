@@ -9,6 +9,16 @@ public class OrderCancelledEvent {
 	private String email;
 	private BigDecimal totalAmount;
 	
+	private UUID eventId;
+
+	public UUID getEventId() {
+	    return eventId;
+	}
+
+	public void setEventId(UUID eventId) {
+	    this.eventId = eventId;
+	}
+	
 	public OrderCancelledEvent(
 	        UUID orderId,
 	        UUID userId,

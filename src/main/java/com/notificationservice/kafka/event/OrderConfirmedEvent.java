@@ -10,6 +10,16 @@ public class OrderConfirmedEvent {
 	private String email;
 	private BigDecimal totalAmount;
 	
+	private UUID eventId;
+
+	public UUID getEventId() {
+	    return eventId;
+	}
+
+	public void setEventId(UUID eventId) {
+	    this.eventId = eventId;
+	}
+	
 	
 	public OrderConfirmedEvent(
 	        UUID orderId,

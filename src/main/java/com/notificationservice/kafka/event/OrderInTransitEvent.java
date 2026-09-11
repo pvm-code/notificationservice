@@ -8,6 +8,16 @@ public class OrderInTransitEvent {
     private UUID userId;
 
     private String email;
+    
+    private UUID eventId;
+
+    public UUID getEventId() {
+        return eventId;
+    }
+
+    public void setEventId(UUID eventId) {
+        this.eventId = eventId;
+    }
 
     public OrderInTransitEvent() {
     }
