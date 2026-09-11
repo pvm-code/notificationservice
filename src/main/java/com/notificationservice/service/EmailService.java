@@ -11,224 +11,156 @@ import org.springframework.stereotype.Service;
 
 import com.notificationservice.metrics.MetricsService;
 
-
 @Service
 public class EmailService {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(EmailService.class);
+
     private final JavaMailSender mailSender;
-    
-	private final MetricsService metricsService;
+    private final MetricsService metricsService;
 
-	private static final Logger log=LoggerFactory.getLogger(NotificationService.class);
+    public EmailService(
+            JavaMailSender mailSender,
+            MetricsService metricsService) {
 
-	
-
-    public EmailService(JavaMailSender mailSender, MetricsService metricsService) {
-		super();
-		this.mailSender = mailSender;
-		this.metricsService = metricsService;
-	}
-
-
-
-	public void sendWelcomeEmail(String toEmail, String userName) {
-		
-		try {
-
-	        SimpleMailMessage message = new SimpleMailMessage();
-
-	        message.setTo(toEmail);
-	        message.setSubject("Welcome to Our Platform 🎉");
-
-	        message.setText(
-	                "Hi " + userName + ",\n\n"
-	                + "Welcome to our platform!\n\n"
-	                + "Your account has been created successfully.\n"
-	                + "We're excited to have you with us.\n\n"
-	                + "Happy Learning!\n\n"
-	                + "Regards,\n"
-	                + "Notification Service"
-	        );
-
-	        mailSender.send(message);
-	        metricsService.incrementEmailSent();
-	        
-		} catch (Exception e) {
-		    metricsService.incrementEmailFailed();
-		}
-        
+        this.mailSender = mailSender;
+        this.metricsService = metricsService;
     }
-	public void sendOrderCreatedEmail(
-	        String toEmail,
-	        UUID orderId,
-	        BigDecimal totalAmount) {
 
-	    try {
+    public void sendWelcomeEmail(
+            String toEmail,
+            String userName) {
 
-	        SimpleMailMessage message = new SimpleMailMessage();
+        sendEmail(
+                toEmail,
+                "Welcome to Our Platform 🎉",
+                "Hi " + userName + ",\n\n"
+                        + "Welcome to our platform!\n\n"
+                        + "Your account has been created successfully.\n"
+                        + "We're excited to have you with us.\n\n"
+                        + "Happy Learning!\n\n"
+                        + "Regards,\n"
+                        + "Notification Service"
+        );
+    }
 
-	        message.setTo(toEmail);
-	        message.setSubject("Order Created Successfully");
+    public void sendOrderCreatedEmail(
+            String toEmail,
+            UUID orderId,
+            BigDecimal totalAmount) {
 
-	        message.setText(
-	                "Hello,\n\n"
-	                + "Your order has been created successfully.\n\n"
-	                + "Order ID: " + orderId + "\n"
-	                + "Total Amount: ₹" + totalAmount + "\n\n"
-	                + "Thank you for your order!\n\n"
-	                + "Regards,\n"
-	                + "Notification Service"
-	        );
+        sendEmail(
+                toEmail,
+                "Order Created Successfully",
+                "Hello,\n\n"
+                        + "Your order has been created successfully.\n\n"
+                        + "Order ID: " + orderId + "\n"
+                        + "Total Amount: ₹" + totalAmount + "\n\n"
+                        + "Thank you for your order!\n\n"
+                        + "Regards,\n"
+                        + "Notification Service"
+        );
+    }
 
-	        mailSender.send(message);
-	        metricsService.incrementEmailSent();
+    public void sendOrderCancelledEmail(
+            String toEmail,
+            UUID orderId) {
 
-	    } catch (Exception e) {
-	        metricsService.incrementEmailFailed();
-	        log.error("Failed to send order confirmation email", e);
-	    }
-	}
+        sendEmail(
+                toEmail,
+                "Order Cancelled",
+                "Hello,\n\n"
+                        + "Your order has been cancelled successfully.\n\n"
+                        + "Order ID: " + orderId + "\n\n"
+                        + "If you did not request this cancellation, "
+                        + "please contact our support team.\n\n"
+                        + "Regards,\n"
+                        + "Notification Service"
+        );
+    }
 
+    public void sendOrderConfirmedEmail(
+            String toEmail,
+            UUID orderId) {
 
+        sendEmail(
+                toEmail,
+                "Order Confirmed",
+                "Hello,\n\n"
+                        + "Your order has been confirmed successfully.\n\n"
+                        + "Order ID: " + orderId + "\n\n"
+                        + "Your order will be dispatched soon.\n\n"
+                        + "Regards,\n"
+                        + "Notification Service"
+        );
+    }
 
-	public void sendOrderCancelledEmail(
-	        String toEmail,
-	        UUID orderId) {
+    public void sendOrderInTransitEmail(
+            String toEmail,
+            UUID orderId) {
 
-	    try {
+        sendEmail(
+                toEmail,
+                "Order in Transit",
+                "Hello,\n\n"
+                        + "Your order is on the way.\n\n"
+                        + "Order ID: " + orderId + "\n\n"
+                        + "Your order has been dispatched.\n\n"
+                        + "Regards,\n"
+                        + "Notification Service"
+        );
+    }
 
-	        SimpleMailMessage message = new SimpleMailMessage();
+    public void sendOrderCompletedEmail(
+            String toEmail,
+            UUID orderId) {
 
-	        message.setTo(toEmail);
-	        message.setSubject("Order Cancelled");
+        sendEmail(
+                toEmail,
+                "Order Completed",
+                "Hello,\n\n"
+                        + "Your order has been delivered successfully.\n\n"
+                        + "Order ID: " + orderId + "\n\n"
+                        + "Thank you for shopping with us.\n\n"
+                        + "Regards,\n"
+                        + "Notification Service"
+        );
+    }
 
-	        message.setText(
-	                "Hello,\n\n"
-	                + "Your order has been cancelled successfully.\n\n"
-	                + "Order ID: " + orderId + "\n\n"
-	                + "If you did not request this cancellation, "
-	                + "please contact our support team.\n\n"
-	                + "Regards,\n"
-	                + "Notification Service"
-	        );
+    private void sendEmail(
+            String toEmail,
+            String subject,
+            String text) {
 
-	        mailSender.send(message);
+        try {
 
-	        metricsService.incrementEmailSent();
+            SimpleMailMessage message =
+                    new SimpleMailMessage();
 
-	    } catch (Exception e) {
+            message.setTo(toEmail);
+            message.setSubject(subject);
+            message.setText(text);
 
-	        metricsService.incrementEmailFailed();
+            mailSender.send(message);
 
-	        log.error(
-	                "Failed to send order cancellation email",
-	                e
-	        );
-	    }
-	}
+            metricsService.incrementEmailSent();
 
+        } catch (Exception e) {
 
+            metricsService.incrementEmailFailed();
 
-	public void sendOrderConfirmedEmail(String toEmail, UUID orderId) {
-		 try {
+            log.error(
+                    "Failed to send email. recipient={}, subject={}",
+                    toEmail,
+                    subject,
+                    e
+            );
 
-		        SimpleMailMessage message = new SimpleMailMessage();
-
-		        message.setTo(toEmail);
-		        message.setSubject("Order Confirmed");
-
-		        message.setText(
-		                "Hello,\n\n"
-		                + "Your order has been confirmed successfully.\n\n"
-		                + "Order ID: " + orderId + "\n\n"
-		                + "order will be dispatched soon , "
-		                + "please contact our support team for any help.\n\n"
-		                + "Regards,\n"
-		                + "Notification Service"
-		        );
-
-		        mailSender.send(message);
-
-		        metricsService.incrementEmailSent();
-
-		    } catch (Exception e) {
-
-		        metricsService.incrementEmailFailed();
-
-		        log.error(
-		                "Failed to send order cancellation email",
-		                e
-		        );
-		    }		
-	}
-
-
-
-	public void sendOrderInTransitEmail(String toEmail, UUID orderId) {
-		try {
-
-	        SimpleMailMessage message = new SimpleMailMessage();
-
-	        message.setTo(toEmail);
-	        message.setSubject("Order in transit");
-
-	        message.setText(
-	                "Hello,\n\n"
-	                + "Your order is on the way.\n\n"
-	                + "Order ID: " + orderId + "\n\n"
-	                + "order  dispatched  , "
-	                + "please contact our support team for any help.\n\n"
-	                + "Regards,\n"
-	                + "Notification Service"
-	        );
-
-	        mailSender.send(message);
-
-	        metricsService.incrementEmailSent();
-
-	    } catch (Exception e) {
-
-	        metricsService.incrementEmailFailed();
-
-	        log.error(
-	                "Failed to send order cancellation email",
-	                e
-	        );
-	    }				
-	}
-
-
-
-	public void sendOrderCompletedEmail(String toEmail, UUID orderId) {
-		try {
-
-	        SimpleMailMessage message = new SimpleMailMessage();
-
-	        message.setTo(toEmail);
-	        message.setSubject("Order completed");
-
-	        message.setText(
-	                "Hello,\n\n"
-	                + "Your order is delivered successfully.\n\n"
-	                + "Order ID: " + orderId + "\n\n"
-	                + "give feedback on ****  , "
-	                + "please contact our support team for any help.\n\n"
-	                + "Regards,\n"
-	                + "Notification Service"
-	        );
-
-	        mailSender.send(message);
-
-	        metricsService.incrementEmailSent();
-
-	    } catch (Exception e) {
-
-	        metricsService.incrementEmailFailed();
-
-	        log.error(
-	                "Failed to send order cancellation email",
-	                e
-	        );
-	    }		
-	}
+            throw new RuntimeException(
+                    "Failed to send email",
+                    e
+            );
+        }
+    }
 }
