@@ -7,8 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notificationservice.kafka.event.OrderCreatedEvent;
-import com.notificationservice.service.EventIdempotencyService;
-import com.notificationservice.service.NotificationService;
+import com.notificationservice.service.NotificationOutboxService;
 
 @Component
 public class OrderEventConsumer {
@@ -17,17 +16,14 @@ public class OrderEventConsumer {
             LoggerFactory.getLogger(OrderEventConsumer.class);
 
     private final ObjectMapper objectMapper;
-    private final NotificationService notificationService;
-    private final EventIdempotencyService eventIdempotencyService;
+    private final NotificationOutboxService notificationOutboxService;
 
     public OrderEventConsumer(
             ObjectMapper objectMapper,
-            NotificationService notificationService,
-            EventIdempotencyService eventIdempotencyService) {
+            NotificationOutboxService notificationOutboxService) {
 
         this.objectMapper = objectMapper;
-        this.notificationService = notificationService;
-        this.eventIdempotencyService = eventIdempotencyService;
+        this.notificationOutboxService = notificationOutboxService;
     }
 
     @KafkaListener(
@@ -37,57 +33,65 @@ public class OrderEventConsumer {
     public void consume(String message) {
 
         try {
+
             OrderCreatedEvent event =
-                    objectMapper.readValue(message, OrderCreatedEvent.class);
+                    objectMapper.readValue(
+                            message,
+                            OrderCreatedEvent.class);
 
             if (event.getEventId() == null) {
+
                 log.error(
                         "Received order-created event without eventId. orderId={}",
-                        event.getOrderId()
-                );
+                        event.getOrderId());
+
                 throw new IllegalStateException(
-                        "eventId is required for order-created event"
-                );
+                        "eventId is required for order-created event");
             }
 
-            if (eventIdempotencyService.alreadyProcessed(event.getEventId())) {
+            String subject = "Order Created Successfully";
+
+            String body =
+                    "Hello,\n\n"
+                    + "Your order has been created successfully.\n\n"
+                    + "Order ID: " + event.getOrderId() + "\n"
+                    + "Total Amount: ₹" + event.getTotalAmount() + "\n\n"
+                    + "Thank you for your order!\n\n"
+                    + "Regards,\n"
+                    + "Notification Service";
+
+            boolean created =
+                    notificationOutboxService.createNotification(
+                            event.getEventId(),
+                            "ORDER_CREATED",
+                            event.getEmail(),
+                            subject,
+                            body);
+
+            if (!created) {
 
                 log.info(
-                        "Duplicate event ignored. eventId={}, orderId={}",
+                        "Duplicate notification ignored. eventId={}, orderId={}",
                         event.getEventId(),
-                        event.getOrderId()
-                );
+                        event.getOrderId());
 
                 return;
             }
 
-            notificationService.sendOrderCreatedNotification(event);
-
-            boolean marked =
-                    eventIdempotencyService.markProcessed(
-                            event.getEventId(),
-                            "ORDER_CREATED"
-                    );
-
-            if (!marked) {
-                log.info(
-                        "Event was already processed concurrently. eventId={}, orderId={}",
-                        event.getEventId(),
-                        event.getOrderId()
-                );
-            }
+            log.info(
+                    "Notification outbox created. eventId={}, orderId={}",
+                    event.getEventId(),
+                    event.getOrderId());
 
         } catch (Exception e) {
 
             log.error(
                     "Failed to process order-created event",
-                    e
-            );
+                    e);
 
             throw new RuntimeException(
                     "Failed to process order-created event",
-                    e
-            );
+                    e);
         }
     }
 }
