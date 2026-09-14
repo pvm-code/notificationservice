@@ -128,7 +128,7 @@ public class EmailService {
         );
     }
 
-    private void sendEmail(
+    public void sendEmail(
             String toEmail,
             String subject,
             String text) {
