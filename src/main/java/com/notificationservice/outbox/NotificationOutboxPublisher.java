@@ -33,7 +33,7 @@ public class NotificationOutboxPublisher {
         this.emailService = emailService;
     }
 
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 300000)
     public void publishPendingNotifications() {
 
         resetStaleProcessingNotifications();
