@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notificationservice.kafka.event.OrderCreatedEvent;
+import com.notificationservice.service.EventIdempotencyService;
 import com.notificationservice.service.NotificationOutboxService;
 
 @Component
@@ -17,13 +18,16 @@ public class OrderEventConsumer {
 
     private final ObjectMapper objectMapper;
     private final NotificationOutboxService notificationOutboxService;
+    private final EventIdempotencyService eventIdempotencyService;
 
     public OrderEventConsumer(
             ObjectMapper objectMapper,
-            NotificationOutboxService notificationOutboxService) {
+            NotificationOutboxService notificationOutboxService,
+            EventIdempotencyService eventIdempotencyService) {
 
         this.objectMapper = objectMapper;
         this.notificationOutboxService = notificationOutboxService;
+        this.eventIdempotencyService = eventIdempotencyService;
     }
 
     @KafkaListener(
@@ -49,6 +53,17 @@ public class OrderEventConsumer {
                         "eventId is required for order-created event");
             }
 
+            if (eventIdempotencyService.alreadyProcessed(
+                    event.getEventId())) {
+
+                log.info(
+                        "Duplicate event ignored. eventId={}, orderId={}",
+                        event.getEventId(),
+                        event.getOrderId());
+
+                return;
+            }
+
             String subject = "Order Created Successfully";
 
             String body =
@@ -71,7 +86,28 @@ public class OrderEventConsumer {
             if (!created) {
 
                 log.info(
-                        "Duplicate notification ignored. eventId={}, orderId={}",
+                        "Notification already exists. Marking event as processed. "
+                        + "eventId={}, orderId={}",
+                        event.getEventId(),
+                        event.getOrderId());
+
+                eventIdempotencyService.markProcessed(
+                        event.getEventId(),
+                        "ORDER_CREATED");
+
+                return;
+            }
+
+            boolean marked =
+                    eventIdempotencyService.markProcessed(
+                            event.getEventId(),
+                            "ORDER_CREATED");
+
+            if (!marked) {
+
+                log.info(
+                        "Event was already processed concurrently. "
+                        + "eventId={}, orderId={}",
                         event.getEventId(),
                         event.getOrderId());
 
@@ -79,7 +115,8 @@ public class OrderEventConsumer {
             }
 
             log.info(
-                    "Notification outbox created. eventId={}, orderId={}",
+                    "Order-created event processed successfully. "
+                    + "eventId={}, orderId={}",
                     event.getEventId(),
                     event.getOrderId());
 
